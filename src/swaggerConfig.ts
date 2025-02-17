@@ -11,8 +11,23 @@ const swaggerConfig: SwaggerOptions = {
     info: {
       title: "API Documentation",
       version: "1.0.0",
+      description: "Documentation de l'API avec Swagger",
     },
     paths: {},
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
+    },
+    security: [
+      {
+        BearerAuth: [],
+      },
+    ],
   },
   apis: ["./src/routes/**/*.ts"],
 };

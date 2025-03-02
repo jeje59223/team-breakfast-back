@@ -1,22 +1,25 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-export function authenticateToken(req: Request, res: Response, next: NextFunction): void {
-    const authHeader = req.headers.authorization;
+export interface  AuthenticatedRequest extends Request {
+    user?: { userId: string; username: string; roles: string[] };
+}
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        res.status(401).json({ message: 'Accès non autorisé, token manquant' });
-        return;
+export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
+    const token = req.cookies?.token;
+
+    if (!token) {
+        res.status(401).json({ message: "Accès non autorisé, token manquant" });
+        return
     }
-
-    const token = authHeader.split(' ')[1];
 
     try {
         const secret = process.env.JWT_SECRET as string;
-        const decoded = jwt.verify(token, secret);
-        (req as any).user = decoded;
+        const decoded = jwt.verify(token, secret) as AuthenticatedRequest["user"];
+        req.user = decoded;
         next();
     } catch (error) {
-        res.status(403).json({ message: 'Token invalide ou expiré' });
+        res.status(403).json({ message: "Token invalide ou expiré" });
+        return
     }
 }

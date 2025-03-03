@@ -14,7 +14,6 @@ const {
 
 export async function getUserByLogin(username: string): Promise<User | null> {
     const url = `${BASE_MONGODB_URL}/find`;
-    console.log('URL : ', url)
     try {
         const body = {
             dataSource: MONGO_DATASOURCE,
@@ -24,7 +23,6 @@ export async function getUserByLogin(username: string): Promise<User | null> {
         };
 
         const data = await fetchJson(url, 'POST', body);
-        console.log('DATA : ', data)
         return data.documents?.[0] || null;
     } catch (err) {
         console.error('Error retrieving user: ', err);

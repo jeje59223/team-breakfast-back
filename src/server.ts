@@ -17,7 +17,6 @@ dotenv.config();
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const certPath = path.resolve(__dirname, "../certs/isrgrootx1.pem");
-console.log("Certificat utilisé :", certPath);
 
 const uri = process.env.MONGO_URL as string;
 

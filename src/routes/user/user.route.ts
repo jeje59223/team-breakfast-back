@@ -318,7 +318,7 @@ router.delete('/delete-user', authenticateToken, async (req: Request, res: Respo
  */
 router.post("/login", async (req: Request, res: Response): Promise<void> => {
     const { username, password } = req.body;
-    console.log('BODY : ', req.body)
+
     if (!username || !password) {
         res.status(400).json({ message: "Username et password sont requis" });
         return;
@@ -326,7 +326,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
 
     try {
         const user = await UserService.getUserByLogin(username);
-        console.log('USER : ', user)
+
         if (!user) {
             res.status(404).json({ message: "Utilisateur non trouvé" });
             return;

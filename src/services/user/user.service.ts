@@ -15,7 +15,6 @@ export async function addNewUser(user: User) {
 }
 
 export async function getUserByLogin(username: string): Promise<User | null> {
-    console.log(username)
     try {
         return await UserApi.getUserByLogin(username);
     } catch (error) {

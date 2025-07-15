@@ -18,8 +18,25 @@ export interface User {
     login: Login;
     picture?: string;
     roles: Role[];
-    numberOfBreakFastOrganised: number;
+    datesOfOrganizedBreakfasts?: string[];
+    // numberOfBreakFastOrganised: number;
     nextOrganizedBreakfastDate?: string;
     creationDate: string;
     ldap: string;
+}
+
+export interface UpdateUser {
+    lastname?: string;
+    firstname?: string;
+    email?: string;
+    login?: Partial<Login>;
+    picture?: string;
+    roles?: Role[];
+    datesOfOrganizedBreakfasts?: string[];
+    numberOfBreakFastOrganised?: number;
+    nextOrganizedBreakfastDate?: string;
+}
+
+export interface UserResponse {
+    insertedId: string;
 }

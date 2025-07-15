@@ -1,5 +1,6 @@
 import {User} from '../../repository/api/models/user';
 import * as UserApi from '../../repository/api/user.api';
+import {ValidateBreakfastResult} from "../../repository/api/user.api";
 
 export async function getUsers() {
     return UserApi.getUsers();
@@ -38,4 +39,17 @@ export async function deleteUserByLdap(ldap: User['ldap']) {
         console.error('Erreur lors de la suppression d\'un utilisateur :', error);
         throw new Error(`Erreur lors de la suppression de l'utilisateur : ${ldap}`);
     }
+}
+
+export async function updateUserService(ldap: string, updateData: Partial<User>) {
+    try {
+        return await UserApi.updateUser(ldap, updateData);
+    } catch (error) {
+        console.error("Erreur lors de la mise à jour de l'utilisateur :", error);
+        throw new Error("Erreur lors de la mise à jour de l'utilisateur");
+    }
+}
+
+export function validateBreakfast(ldap: string, date: string): Promise<ValidateBreakfastResult> {
+    return UserApi.validateBreakfast(ldap, date);
 }

@@ -37,6 +37,7 @@ const swaggerConfig: SwaggerOptions = {
         post: {
           summary: 'Connexion de l\'utilisateur',
           description: 'Permet à l\'utilisateur de se connecter.',
+          tags: ['Authentification'],
           parameters: [
             {
               in: 'header',
@@ -49,12 +50,64 @@ const swaggerConfig: SwaggerOptions = {
               },
             },
           ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    username: {
+                      type: 'string',
+                      example: 'ken',
+                    },
+                    password: {
+                      type: 'string',
+                      example: 'ler123',
+                    },
+                  },
+                },
+              },
+            },
+          },
           responses: {
             200: {
               description: 'Utilisateur connecté avec succès',
             },
             401: {
               description: 'Échec de l\'authentification',
+            },
+          },
+        },
+      },
+      '/users/logout': {
+        post: {
+          summary: 'Déconnexion de l\'utilisateur',
+          description: 'Permet à l\'utilisateur de se déconnecter en détruisant sa session ou son token d\'authentification.',
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          tags: ['Authentification'],
+          parameters: [
+            {
+              in: 'header',
+              name: 'X-CSRF-Token',
+              required: true,
+              description: 'Token CSRF pour protéger contre les attaques CSRF',
+              schema: {
+                type: 'string',
+                example: 'ton_token_csrf_ici',
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Utilisateur déconnecté avec succès',
+            },
+            401: {
+              description: 'Utilisateur non authentifié',
             },
           },
         },
@@ -74,6 +127,70 @@ const swaggerConfig: SwaggerOptions = {
             },
             401: {
               description: 'Non autorisé',
+            },
+          },
+        },
+      },
+      '/users/ldap/{ldap}': {
+        get: {
+          summary: 'Obtenir un utilisateur',
+          description: 'Récupère un utilisateur en fonction de son LDAP.',
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          tags: ['Users'],
+          parameters: [
+            {
+              in: 'path',
+              name: 'ldap',
+              required: true,
+              description: 'LDAP de l\'utilisateur',
+              schema: {
+                type: 'string',
+                example: 'ken',
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Utilisateur récupéré avec succès',
+            },
+            404: {
+              description: 'Utilisateur non trouvé',
+            },
+          },
+        },
+      },
+      '/users/username/{username}': {
+        get: {
+          summary: 'Obtenir un utilisateur par son nom d\'utilisateur',
+          description: 'Récupère un utilisateur en fonction de son nom d\'utilisateur.',
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          tags: ['Users'],
+          parameters: [
+            {
+              in: 'path',
+              name: 'username',
+              required: true,
+              description: 'Nom d\'utilisateur de l\'utilisateur',
+              schema: {
+                type: 'string',
+                example: 'ken',
+              },
+            },
+          ],
+          responses: {
+            200: {
+              description: 'Utilisateur récupéré avec succès',
+            },
+            404: {
+              description: 'Utilisateur non trouvé',
             },
           },
         },
@@ -183,6 +300,7 @@ const swaggerConfig: SwaggerOptions = {
         delete: {
           summary: 'Supprimer un utilisateur',
           description: 'Supprime un utilisateur en fonction de son LDAP.',
+          tags: ['Users'],
           parameters: [
             {
               in: 'header',
@@ -227,7 +345,160 @@ const swaggerConfig: SwaggerOptions = {
           },
         },
       },
-
+      '/users/update-user': {
+        put: {
+          summary: 'Mettre à jour un utilisateur',
+          description: 'Permet de modifier les informations d\'un utilisateur existant.',
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          tags: ['Users'],
+          parameters: [
+            {
+              in: 'header',
+              name: 'X-CSRF-Token',
+              required: true,
+              description: 'Token CSRF pour la sécurité',
+              schema: {
+                type: 'string',
+                example: 'ton_token_csrf_ici',
+              },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    ldap: {
+                      type: 'string',
+                      example: '1',
+                      description: 'Identifiant LDAP de l\'utilisateur',
+                    },
+                    updateData: {
+                      type: 'object',
+                      properties: {
+                        firstname: { type: 'string', example: 'Ken' },
+                        lastname: { type: 'string', example: 'Shiro' },
+                        email: { type: 'string', example: 'ken@example.com' },
+                        picture: { type: 'string', example: 'https://randomuser.me/api/port' },
+                        login: {
+                          type: 'object',
+                          properties: {
+                            username: { type: 'string', example: 'ken' },
+                            password: { type: 'string', example: 'ler123' },
+                          },
+                        },
+                        roles: {type: 'array', items: { type: 'string', enum: ['ADMIN', 'USER'] }, example: ['USER']},
+                        numberOfBreakFastOrganised: { type: 'integer', example: 2 },
+                        nextOrganizedBreakfastDate: { type: 'string', format: 'date-time', example: '2024-03-26T00:00:00+01:00' },
+                      },
+                      description: 'Données à mettre à jour',
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Utilisateur mis à jour avec succès',
+            },
+            400: {
+              description: 'Requête invalide (données manquantes)',
+            },
+            500: {
+              description: 'Erreur interne du serveur',
+            },
+          },
+        },
+      },
+      '/users/validate-breakfast': {
+        put: {
+          summary: 'Valider un petit déjeuner',
+          description: 'Valide l’organisation d’un petit déjeuner pour un utilisateur en fonction de son LDAP.',
+          tags: ['Users'],
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          parameters: [
+            {
+              in: 'header',
+              name: 'X-CSRF-Token',
+              required: true,
+              description: 'Token CSRF pour la sécurité',
+              schema: {
+                type: 'string',
+                example: 'ton_token_csrf_ici',
+              },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    ldap: {
+                      type: 'string',
+                      example: 'ken',
+                      description: 'Identifiant LDAP de l\'utilisateur',
+                    },
+                    date: {
+                      type: 'string',
+                      format: 'date-time',
+                      example: '2025-04-22T08:00:00+01:00',
+                      description: 'Date du petit déjeuner à valider',
+                    },
+                  },
+                  required: ['ldap', 'date'],
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Petit-déjeuner validé',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: 'Petit-déjeuner validé',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            500: {
+              description: 'Erreur lors de la validation du petit-déjeuner',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: 'Erreur lors de la validation du petit-déjeuner',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     components: {
       securitySchemes: {

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { User } from "./models/user";
+import {UpdateUser, User} from "./models/user";
 import { fetchJson } from "../../utils/fetchjJson";
 import bcrypt from 'bcrypt';
 
@@ -112,8 +112,8 @@ export async function addUser(user: User): Promise<any> {
         },
         picture: user.picture || null,
         roles: user.roles,
-        numberOfBreakFastOrganised: user.numberOfBreakFastOrganised || 0,
-        nextOrganizedBreakfastDate: user.nextOrganizedBreakfastDate || null,
+        datesOfOrganizedBreakfasts: [],
+        nextOrganizedBreakfastDate: null,
         creationDate: new Date().toISOString(),
         ldap: user.ldap,
     };
@@ -158,5 +158,87 @@ export async function deleteUser(ldap: string): Promise<any> {
     } catch (err) {
         console.error('Error deleting user:', err);
         return null;
+    }
+}
+
+export async function updateUser(ldap: string, updateData: UpdateUser): Promise<any> {
+    const url = `${BASE_MONGODB_URL}/updateOne`;
+
+    if (!ldap || Object.keys(updateData).length === 0) {
+        throw new Error("Le champ 'ldap' et au moins un champ de mise à jour sont requis.");
+    }
+
+    if (updateData.login && updateData.login.password) {
+        const saltRounds = 10;
+        updateData.login.password = await bcrypt.hash(updateData.login.password, saltRounds);
+    }
+
+    const filter = { ldap };
+    const update = { $set: updateData };
+
+    try {
+        const body = {
+            dataSource: MONGO_DATASOURCE,
+            database: MONGO_DATABASE,
+            collection: MONGO_COLLECTION_USERS,
+            filter,
+            update,
+        };
+
+        return await fetchJson(url, 'POST', body);
+    } catch (err) {
+        console.error("Erreur lors de la mise à jour de l'utilisateur :", err);
+        throw new Error("Erreur lors de la mise à jour de l'utilisateur");
+    }
+}
+
+ export type ValidateBreakfastResult =
+    | { status: 'already-exists'; message: string }
+    | { status: 'success'; message: string };
+
+export async function validateBreakfast(ldap: string, date: string): Promise<ValidateBreakfastResult> {
+    const url = `${BASE_MONGODB_URL}/updateOne`;
+
+    if (!ldap || !date) {
+        throw new Error("Les champs 'ldap' et 'date' sont requis.");
+    }
+
+    try {
+        const userResponse = await fetchJson(`${BASE_MONGODB_URL}/findOne`, 'POST', {
+            dataSource: MONGO_DATASOURCE,
+            database: MONGO_DATABASE,
+            collection: MONGO_COLLECTION_USERS,
+            filter: { ldap }
+        });
+
+        const user = userResponse.document;
+
+        if (user?.datesOfOrganizedBreakfasts?.includes(date)) {
+            return {
+                status: 'already-exists',
+                message: 'Le petit-déjeuner a déjà été validé pour cette date.'
+            };
+        }
+
+        const body = {
+            dataSource: MONGO_DATASOURCE,
+            database: MONGO_DATABASE,
+            collection: MONGO_COLLECTION_USERS,
+            filter: { ldap },
+            update: {
+                $addToSet: { datesOfOrganizedBreakfasts: date },
+                $set: { nextOrganizedBreakfastDate: null },
+            },
+        };
+
+        await fetchJson(url, 'POST', body);
+
+        return {
+            status: 'success',
+            message: 'Petit-déjeuner validé avec succès.'
+        };
+    } catch (err) {
+        console.error("Erreur lors de la validation du petit-déjeuner :", err);
+        throw new Error("Erreur lors de la validation du petit-déjeuner");
     }
 }

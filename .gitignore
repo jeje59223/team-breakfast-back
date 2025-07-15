@@ -47,3 +47,6 @@ tsconfig.tsbuildinfo
 
 # Linux
 *~
+
+# Certificats
+certs/

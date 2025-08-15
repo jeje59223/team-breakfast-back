@@ -19,7 +19,7 @@ export interface User {
     picture?: string;
     roles: Role[];
     datesOfOrganizedBreakfasts?: string[];
-    // numberOfBreakFastOrganised: number;
+    numberOfBreakFastOrganised?: number;
     nextOrganizedBreakfastDate?: string;
     creationDate: string;
     ldap: string;

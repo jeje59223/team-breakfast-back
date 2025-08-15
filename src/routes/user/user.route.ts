@@ -6,7 +6,8 @@ import bcrypt from 'bcrypt';
 import { AuthenticatedRequest, authenticateToken } from '../../middleware/auth.middleware';
 import { updateUserService } from "../../services/user/user.service";
 import { getUserByLdap } from "../../repository/api/user.api";
-import { authorizeRole} from "../../middleware/role.middleware";
+import {authorizeRole, authorizeSelfOrRole} from "../../middleware/role.middleware";
+import {User} from "../../repository/api/models/user";
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get('', authenticateToken, async (req: Request, res: Response) => {
 
 router.post('/add-user', authenticateToken, authorizeRole('ADMIN'), async (req: Request, res: Response) => {
     try {
-        const user = req.body;
+        const user: User = req.body;
         const existingUser = await getUserByLdap(user.ldap);
         if (existingUser) {
             res.status(400).json({ message: 'Un utilisateur avec ce LDAP existe déjà.' });
@@ -33,7 +34,8 @@ router.post('/add-user', authenticateToken, authorizeRole('ADMIN'), async (req: 
 router.get('/username/:username', authenticateToken, async (req: Request, res: Response) => {
     res.send(await UserService.getUserByUsername(req.params.username));
 });
-
+// exemple d'utilisation de authorizeSelfOrRole
+// authorizeSelfOrRole('ADMIN', 'ldap')
 router.delete('/delete-user', authenticateToken, authorizeRole('ADMIN'), async (req: Request, res: Response) => {
     try {
         const { ldap } = req.body;
@@ -79,7 +81,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
         }
 
         const token = jwt.sign(
-            { userId: user._id, username: user.login.username, roles: user.roles },
+            { userId: user._id, username: user.login.username, roles: user.roles, ldap: user.ldap },
             process.env.JWT_SECRET as string,
             { expiresIn: "30min" }
         );
@@ -88,7 +90,7 @@ router.post("/login", async (req: Request, res: Response): Promise<void> => {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
-            maxAge: 30 * 60 * 1000, // 30 minutes
+            maxAge: 30 * 60 * 1000,
         });
 
         res.status(200).json({
@@ -141,9 +143,11 @@ router.get('/ldap/:ldap', authenticateToken, async (req: Request, res: Response)
     res.send(await UserService.getUserWithLdap(req.params.ldap));
 });
 
-router.put('/update-user', authenticateToken, async (req: Request, res: Response) => {
+router.put('/update-user', authenticateToken, authorizeSelfOrRole('ADMIN', 'ldap'), async (req: Request, res: Response) => {
     const { ldap, updateData } = req.body;
-
+    console.log('🛠 Données reçues :', req.body);
+    console.log('📌 LDAP :', ldap);
+    console.log('📦 updateData :', updateData);
     if (!ldap || !updateData) {
         res.status(400).json({ message: "Le champ 'ldap' et 'updateData' sont requis" });
     }
@@ -163,7 +167,7 @@ router.put('/update-user', authenticateToken, async (req: Request, res: Response
     }
 });
 
-router.put('/validate-breakfast', authenticateToken, async (req: Request, res: Response) => {
+router.put('/validate-breakfast', authenticateToken, authorizeRole('ADMIN'), async (req: Request, res: Response) => {
     const { ldap, date } = req.body;
 
     if (!ldap || !date) {
@@ -179,4 +183,38 @@ router.put('/validate-breakfast', authenticateToken, async (req: Request, res: R
     }
 });
 
+router.put('/add-next-organized-breakfast-date', authenticateToken, authorizeSelfOrRole('ADMIN', 'ldap'), async (req: Request, res: Response) => {
+    const { ldap, date } = req.body;
+
+    if (!ldap || !date) {
+        res.status(400).json({ message: "Les champs 'ldap' et 'date' sont requis." });
+        return;
+    }
+
+    try {
+        const result = await UserService.addNextOrganizedBreakfastDate(ldap, date);
+        res.status(200).json({ message: result.message });
+    } catch (error) {
+        console.error("Erreur lors de l'ajout de la prochaine date de petit-déjeuner organisé :", error);
+        res.status(500).json({ message: "Erreur lors de l'ajout de la prochaine date de petit-déjeuner organisé" });
+    }
+})
+
 export default router;
+
+router.put('/remove-next-organized-breakfast-date', authenticateToken, authorizeSelfOrRole('ADMIN', 'ldap'), async (req: Request, res: Response) => {
+    const { ldap } = req.body;
+
+    if (!ldap) {
+        res.status(400).json({ message: "Le champ 'ldap' est requis." });
+        return;
+    }
+
+    try {
+        const result = await UserService.removeNextOrganizedBreakfastDate(ldap);
+        res.status(200).json({ message: result.message });
+    } catch (error) {
+        console.error("Erreur lors de la suppression de la prochaine date de petit-déjeuner organisé :", error);
+        res.status(500).json({ message: "Erreur lors de la suppression de la prochaine date de petit-déjeuner organisé" });
+    }
+})

@@ -1,6 +1,6 @@
 import {User} from '../../repository/api/models/user';
 import * as UserApi from '../../repository/api/user.api';
-import {ValidateBreakfastResult} from "../../repository/api/user.api";
+import { ValidateBreakfastResult } from "../../repository/api/user.api";
 
 export async function getUsers() {
     return UserApi.getUsers();
@@ -52,4 +52,12 @@ export async function updateUserService(ldap: string, updateData: Partial<User>)
 
 export function validateBreakfast(ldap: string, date: string): Promise<ValidateBreakfastResult> {
     return UserApi.validateBreakfast(ldap, date);
+}
+
+export function addNextOrganizedBreakfastDate(ldap: string, date: string): Promise<ValidateBreakfastResult> {
+    return UserApi.addNextOrganizedBreakfastDate(ldap, date);
+}
+
+export function removeNextOrganizedBreakfastDate(ldap: string): Promise<ValidateBreakfastResult> {
+    return UserApi.removeNextOrganizedBreakfastDate(ldap);
 }

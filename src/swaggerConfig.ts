@@ -499,6 +499,145 @@ const swaggerConfig: SwaggerOptions = {
           },
         },
       },
+      '/users/add-next-organized-breakfast-date': {
+        put: {
+          summary: 'Ajouter ou modifier la prochaine date de petit-déjeuner organisé',
+          description: 'Permet de définir ou mettre à jour la prochaine date de petit-déjeuner organisé pour un utilisateur identifié par son LDAP.',
+          tags: ['Users'],
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          parameters: [
+            {
+              in: 'header',
+              name: 'X-CSRF-Token',
+              required: true,
+              description: 'Token CSRF pour la sécurité',
+              schema: {
+                type: 'string',
+                example: 'ton_token_csrf_ici',
+              },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    ldap: {
+                      type: 'string',
+                      example: 'ken',
+                      description: 'Identifiant LDAP de l\'utilisateur',
+                    },
+                    date: {
+                      type: 'string',
+                      format: 'date-time',
+                      example: '2025-09-15T08:00:00+01:00',
+                      description: 'Nouvelle date du petit-déjeuner organisé',
+                    },
+                  },
+                  required: ['ldap', 'date'],
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Date de petit-déjeuner mise à jour avec succès',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: 'Date mise à jour avec succès',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'Données invalides ou manquantes',
+            },
+            500: {
+              description: 'Erreur interne du serveur',
+            },
+          },
+        },
+      },
+      '/users/remove-next-organized-breakfast-date': {
+        put: {
+          summary: 'Supprimer la prochaine date de petit-déjeuner organisé',
+          description: 'Met à null le champ nextOrganizedBreakfastDate pour un utilisateur identifié par son LDAP.',
+          tags: ['Users'],
+          security: [
+            {
+              BearerAuth: [],
+            },
+          ],
+          parameters: [
+            {
+              in: 'header',
+              name: 'X-CSRF-Token',
+              required: true,
+              description: 'Token CSRF pour la sécurité',
+              schema: {
+                type: 'string',
+                example: 'ton_token_csrf_ici',
+              },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    ldap: {
+                      type: 'string',
+                      example: 'ken',
+                      description: 'Identifiant LDAP de l\'utilisateur',
+                    },
+                  },
+                  required: ['ldap'],
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: 'Date de petit-déjeuner supprimée avec succès',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      message: {
+                        type: 'string',
+                        example: 'Date supprimée avec succès',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            400: {
+              description: 'LDAP manquant ou invalide',
+            },
+            500: {
+              description: 'Erreur interne du serveur',
+            },
+          },
+        },
+      },
+
     },
     components: {
       securitySchemes: {

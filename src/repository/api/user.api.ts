@@ -242,3 +242,58 @@ export async function validateBreakfast(ldap: string, date: string): Promise<Val
         throw new Error("Erreur lors de la validation du petit-déjeuner");
     }
 }
+
+export async function addNextOrganizedBreakfastDate(
+    ldap: string,
+    date: string | null
+): Promise<any> {
+    const url = `${BASE_MONGODB_URL}/updateOne`;
+
+    if (!ldap) {
+        throw new Error("Le champ 'ldap' est requis.");
+    }
+
+    try {
+        const body = {
+            dataSource: MONGO_DATASOURCE,
+            database: MONGO_DATABASE,
+            collection: MONGO_COLLECTION_USERS,
+            filter: { ldap },
+            update: {
+                $set: { nextOrganizedBreakfastDate: date },
+            },
+        };
+
+        return await fetchJson(url, 'POST', body);
+    } catch (err) {
+        console.error("Erreur lors de l'ajout d'une date next breakfast' :", err);
+        throw new Error("Erreur lors de la mise à jour de la date de next breakfast");
+    }
+}
+
+export async function removeNextOrganizedBreakfastDate(
+    ldap: string
+): Promise<any> {
+    const url = `${BASE_MONGODB_URL}/updateOne`;
+
+    if (!ldap) {
+        throw new Error("Le champ 'ldap' est requis.");
+    }
+
+    try {
+        const body = {
+            dataSource: MONGO_DATASOURCE,
+            database: MONGO_DATABASE,
+            collection: MONGO_COLLECTION_USERS,
+            filter: { ldap },
+            update: {
+                $set: { nextOrganizedBreakfastDate: null },
+            },
+        };
+
+        return await fetchJson(url, 'POST', body);
+    } catch (err) {
+        console.error("Erreur lors de la suppression de la date next breakfast :", err);
+        throw new Error("Erreur lors de la suppression de la date de next breakfast");
+    }
+}

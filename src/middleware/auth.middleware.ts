@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface  AuthenticatedRequest extends Request {
-    user?: { userId: string; username: string; roles: string[] };
+    user?: { userId: string; username: string; roles: string[], ldap?: string; };
 }
 
 export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction): void {
@@ -16,6 +16,7 @@ export function authenticateToken(req: AuthenticatedRequest, res: Response, next
     try {
         const secret = process.env.JWT_SECRET as string;
         const decoded = jwt.verify(token, secret) as AuthenticatedRequest["user"];
+        console.log('Token décodé:', decoded);
         req.user = decoded;
         next();
     } catch (error) {
